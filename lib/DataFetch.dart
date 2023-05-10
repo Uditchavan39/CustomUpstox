@@ -1,0 +1,241 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:developer';
+import 'package:flutter_session_manager/flutter_session_manager.dart';
+import 'package:CustomUpstox/api_data_models/buysell.dart';
+import 'package:CustomUpstox/api_data_models/charges.dart';
+import 'package:CustomUpstox/secureStore.dart';
+import 'package:http/http.dart' as http;
+import 'package:CustomUpstox/auth/secrets.dart';
+
+class DataFetch {
+  Future<List<buySell>> realizedProfitLossList(String financialYear) async {
+    String accesstoken = await secureStore().gettoken().then((value) {
+      return value!;
+    });
+    final pldata = Uri.parse(
+        'https://api-v2.upstox.com/trade/profit-loss/data?segment=EQ&financial_year=$financialYear&page_number=1&page_size=3000');
+    Future<http.Response?> register() async {
+      http.Response? response;
+      try {
+        response = await http.get(
+          pldata,
+          headers: {
+            HttpHeaders.acceptHeader: "application/json",
+            'Api-Version': '2.0',
+            HttpHeaders.authorizationHeader: 'Bearer $accesstoken'
+          },
+        );
+      } catch (e) {
+        log(e.toString());
+      }
+      return response;
+    }
+
+    http.Response? par = await register();
+    late Map<String, dynamic> temp = jsonDecode(par!.body);
+    List<Map<String, dynamic>> parsed =
+        (temp["data"] as List).map((e) => e as Map<String, dynamic>).toList();
+    int tradecount = await profitLossDataCount(financialYear).then((value) {
+      return value;
+    });
+    List<buySell> bsList = [];
+    for (int i = 0; i < parsed.length; i++) {
+      buySell bs_obj = buySell(
+          parsed[i]["scripName"],
+          parsed[i]["tradeType"],
+          parsed[i]["buyDate"],
+          parsed[i]["quantity"],
+          parsed[i]["buyAverage"],
+          parsed[i]["sellDate"],
+          parsed[i]["sellAverage"],
+          parsed[i]["financialYear"],
+          parsed[i]["isin"],
+          parsed[i]["dataSuccessOrError"]);
+      bsList.add(bs_obj);
+      await SessionManager().set("bs+$i+obj+$financialYear", bs_obj);
+    }
+    await SessionManager().set("plListsize$financialYear", parsed.length);
+    return bsList;
+  }
+
+//------------------------------------------------------------------------------------------------------------
+  Future<int> profitLossDataCount(String financialYear) async {
+    String accesstoken = await secureStore().gettoken().then((value) {
+      return value!;
+    });
+    final pldatacount = Uri.parse(
+        'https://api-v2.upstox.com/trade/profit-loss/metadata?start_date=01-04-2022&emd_date=30-03-2023&segment=EQ&financial_year=$financialYear');
+    Future<http.Response?> register() async {
+      http.Response? response;
+      try {
+        response = await http.get(
+          pldatacount,
+          headers: {
+            HttpHeaders.acceptHeader: "application/json",
+            'Api-Version': '2.0',
+            HttpHeaders.authorizationHeader: 'Bearer $accesstoken'
+          },
+        );
+      } catch (e) {
+        log(e.toString());
+      }
+      return response;
+    }
+
+    http.Response? par = await register();
+    late Map<String, dynamic> parsed = jsonDecode(par!.body);
+    int tradecount = parsed["trades_count"];
+    return tradecount;
+  }
+//---------------------------------------------------------------------------------------------------------------------------
+
+  Future<charges_obj> charges(String financialYear) async {
+    String accesstoken = await secureStore().gettoken().then((value) {
+      return value!;
+    });
+    final charges = Uri.parse(
+        'https://api-v2.upstox.com/trade/profit-loss/charges?&financial_year=$financialYear&segment=EQ');
+    Future<http.Response?> register() async {
+      http.Response? response;
+      try {
+        response = await http.get(
+          charges,
+          headers: {
+            HttpHeaders.acceptHeader: "application/json",
+            'Api-Version': '2.0',
+            HttpHeaders.authorizationHeader: 'Bearer $accesstoken'
+          },
+        );
+      } catch (e) {
+        
+      }
+      return response;
+    }
+
+    http.Response? par = await register();
+    late Map<String, dynamic> parsed = jsonDecode(par!.body);
+    if (parsed["status"] == "error") {
+      secureStore().deleteall();
+      secureStore().setDate("");
+      return defaultchargeObj().defaultChargeObj;
+    } else {
+      parsed = parsed["data"];
+      Map<String, dynamic> taxes = parsed["charges_breakdown"]["taxes"];
+      Map<String, dynamic> otherCharge = parsed["charges_breakdown"]["charges"];
+
+      charges_obj charge = charges_obj(
+          parsed["charges_breakdown"]["total"],
+          parsed["charges_breakdown"]["brokerage"],
+          taxes["gst"],
+          taxes["stt"],
+          taxes["stamp_duty"],
+          otherCharge["transaction"],
+          otherCharge["clearing"],
+          otherCharge["others"],
+          otherCharge["sebi_turnover"],
+          otherCharge["demat_transaction"],
+          financialYear,
+          true);
+      return charge;
+    }
+  }
+
+  //------------------------------------------------------------------------------------------------------------------
+  Future<List<charges_obj>> charges_for_all_financial_year() async {
+    var yearStart = secrets().yearStart;
+    var yearEnd = secrets().yearEnd;
+    int i = 2;
+    var totalChargeCheck = 0.0;
+    List<charges_obj> list = [];
+    while (i >= 0 || totalChargeCheck != 0) {
+      if (i < 0 && totalChargeCheck == 0) break;
+      String fy = yearStart.toString() + yearEnd.toString();
+      charges_obj temp = await charges(fy).then((value) {
+        return value;
+      });
+      totalChargeCheck = temp.total;
+      i--;
+      yearStart++;
+      yearEnd++;
+      list.add(temp);
+      await SessionManager().set("charge$fy", temp);
+    }
+    await SessionManager().set("listSize", list.length);
+    await SessionManager().set("chargelist", true);
+    return list;
+  }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+Future<List<List<buySell>>> buysell_for_all_financial_year() async {
+  var yearStart = secrets().yearStart;
+  var yearEnd = secrets().yearEnd;
+  int listLength = await SessionManager().get("listSize");
+  List<List<buySell>> ans = [];
+  int i = 0;
+  while (i < listLength) {
+    String fy = yearStart.toString() + yearEnd.toString();
+    List<buySell> list =
+        await DataFetch().realizedProfitLossList(fy).then((value) {
+      return value;
+    });
+    ans.add(list);
+    i++;
+    yearStart++;
+    yearEnd++;
+  }
+  // await SessionManager().set("tradecount", list.length);
+  await SessionManager().set("plList", true);
+    return ans;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+Future<List<charges_obj>> fetchsessionchargeobj() async {
+  var yearStart = secrets().yearStart;
+  var yearEnd = secrets().yearEnd;
+  List<charges_obj> list = [];
+  var length = await SessionManager().get("listSize");
+  int i = 0;
+  while (i < length) {
+    String fy = yearStart.toString() + yearEnd.toString();
+    Map<String, dynamic> temp =
+        await SessionManager().get("charge$fy").then((value) {
+      return value;
+    });
+    if (temp==null) continue;
+    charges_obj obj = jsoncharges().fromJson(temp);
+    list.add(obj);
+    i++;
+    yearStart++;
+    yearEnd++;
+  }
+  return list;
+}
+
+Future<List<List<buySell>>> fetchsessionProfitLossobj() async {
+  var yearStart = secrets().yearStart;
+  var yearEnd = secrets().yearEnd;
+  List<List<buySell>> list = [];
+  var length = await SessionManager().get("listSize");
+  int i = 0;
+  while (i < length) {
+    String fy = yearStart.toString() + yearEnd.toString();
+    int parsedlength = await SessionManager().get("plListsize$fy");
+    List<buySell> bslist = [];
+    for (int j = 0; j < parsedlength; j++) {
+      Map<String, dynamic> temp =
+          await SessionManager().get("bs+$j+obj+$fy").then((value) {
+        return value;
+      });
+      buySell bsobj = jsonBuySell().fromJson(temp);
+      bslist.add(bsobj);
+    }
+    // buySell obj = jsonBuySell().fromJson(temp);
+    list.add(bslist);
+    i++;
+    yearStart++;
+    yearEnd++;
+  }
+  return list;
+}

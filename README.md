@@ -14,4 +14,4 @@ Create App In your Upstox Account. where you will Receive API Key, API Secret an
 
 -Using Flutter SMS Library Read and sorted all Dividend messages based on that Calculated Total Dividend Received Till Date.
 
-<img src="https://github.com/Uditchavan39/CustomUpstox/assets/59533381/1e311cf0-574f-458e-92a4-dbbff44fc2a2" width=20% height=20%>
+<img src="https://github.com/Uditchavan39/CustomUpstox/assets/59533381/1e311cf0-574f-458e-92a4-dbbff44fc2a2" width=30% height=30%>

@@ -13,3 +13,4 @@ Create App In your Upstox Account. where you will Receive API Key, API Secret an
 -Calculated Net Profit/Loss based On Data
 
 -Using Flutter SMS Library Read and sorted all Dividend messages based on that Calculated Total Dividend Received Till Date.
+![CustomUpstox](https://github.com/Uditchavan39/CustomUpstox/assets/59533381/1e311cf0-574f-458e-92a4-dbbff44fc2a2)

@@ -34,30 +34,36 @@ class DataFetch {
     }
 
     http.Response? par = await register();
-    late Map<String, dynamic> temp = jsonDecode(par!.body);
-    List<Map<String, dynamic>> parsed =
-        (temp["data"] as List).map((e) => e as Map<String, dynamic>).toList();
-    int tradecount = await profitLossDataCount(financialYear).then((value) {
-      return value;
-    });
-    List<buySell> bsList = [];
-    for (int i = 0; i < parsed.length; i++) {
-      buySell bs_obj = buySell(
-          parsed[i]["scripName"],
-          parsed[i]["tradeType"],
-          parsed[i]["buyDate"],
-          parsed[i]["quantity"],
-          parsed[i]["buyAverage"],
-          parsed[i]["sellDate"],
-          parsed[i]["sellAverage"],
-          parsed[i]["financialYear"],
-          parsed[i]["isin"],
-          parsed[i]["dataSuccessOrError"]);
-      bsList.add(bs_obj);
-      await SessionManager().set("bs+$i+obj+$financialYear", bs_obj);
+    if (par != null && par.statusCode == 200) {
+      late Map<String, dynamic> temp = jsonDecode(par!.body);
+      List<Map<String, dynamic>> parsed =
+          (temp["data"] as List).map((e) => e as Map<String, dynamic>).toList();
+      int tradecount = await profitLossDataCount(financialYear).then((value) {
+        return value;
+      });
+      List<buySell> bsList = [];
+      for (int i = 0; i < parsed.length; i++) {
+        buySell bs_obj = buySell(
+            parsed[i]["scripName"],
+            parsed[i]["tradeType"],
+            parsed[i]["buyDate"],
+            parsed[i]["quantity"],
+            parsed[i]["buyAverage"],
+            parsed[i]["sellDate"],
+            parsed[i]["sellAverage"],
+            parsed[i]["financialYear"],
+            parsed[i]["isin"],
+            parsed[i]["dataSuccessOrError"]);
+        bsList.add(bs_obj);
+        await SessionManager().set("bs+$i+obj+$financialYear", bs_obj);
+      }
+      await SessionManager().set("plListsize$financialYear", parsed.length);
+      return bsList;
+    } else {
+      realizedProfitLossList(financialYear);
+      List<buySell> l = [];
+      return l;
     }
-    await SessionManager().set("plListsize$financialYear", parsed.length);
-    return bsList;
   }
 
 //------------------------------------------------------------------------------------------------------------
@@ -91,7 +97,7 @@ class DataFetch {
   }
 //---------------------------------------------------------------------------------------------------------------------------
 
-  Future<charges_obj> charges(String financialYear) async {
+  Future<charges_obj> charges_forfin(String financialYear) async {
     String accesstoken = await secureStore().gettoken().then((value) {
       return value!;
     });
@@ -108,35 +114,44 @@ class DataFetch {
             HttpHeaders.authorizationHeader: 'Bearer $accesstoken'
           },
         );
-      } catch (e) {}
+      } catch (e) {
+        log(e.toString());
+      }
       return response;
     }
 
     http.Response? par = await register();
-    late Map<String, dynamic> parsed = jsonDecode(par!.body);
-    if (parsed["status"] == "error") {
-      secureStore().deleteall();
-      secureStore().setDate("");
-      return defaultchargeObj().defaultChargeObj;
-    } else {
-      parsed = parsed["data"];
-      Map<String, dynamic> taxes = parsed["charges_breakdown"]["taxes"];
-      Map<String, dynamic> otherCharge = parsed["charges_breakdown"]["charges"];
+    if (par != null && par.statusCode == 200) {
+      late Map<String, dynamic> parsed = jsonDecode(par!.body);
+      if (parsed["status"] == "error") {
+        secureStore().deleteall();
+        secureStore().setDate("");
+        return defaultchargeObj().defaultChargeObj;
+      } else {
+        parsed = parsed["data"];
+        Map<String, dynamic> taxes = parsed["charges_breakdown"]["taxes"];
+        Map<String, dynamic> otherCharge =
+            parsed["charges_breakdown"]["charges"];
 
-      charges_obj charge = charges_obj(
-          parsed["charges_breakdown"]["total"],
-          parsed["charges_breakdown"]["brokerage"],
-          taxes["gst"],
-          taxes["stt"],
-          taxes["stamp_duty"],
-          otherCharge["transaction"],
-          otherCharge["clearing"],
-          otherCharge["others"],
-          otherCharge["sebi_turnover"],
-          otherCharge["demat_transaction"],
-          financialYear,
-          true);
-      return charge;
+        charges_obj charge = charges_obj(
+            parsed["charges_breakdown"]["total"],
+            parsed["charges_breakdown"]["brokerage"],
+            taxes["gst"],
+            taxes["stt"],
+            taxes["stamp_duty"],
+            otherCharge["transaction"],
+            otherCharge["clearing"],
+            otherCharge["others"],
+            otherCharge["sebi_turnover"],
+            otherCharge["demat_transaction"],
+            financialYear,
+            true);
+        return charge;
+      }
+    } else {
+      charges_forfin(financialYear);
+      charges_obj l = defaultchargeObj().defaultChargeObj;
+      return l;
     }
   }
 
@@ -144,13 +159,13 @@ class DataFetch {
   Future<List<charges_obj>> charges_for_all_financial_year() async {
     var yearStart = secrets().yearStart;
     var yearEnd = secrets().yearEnd;
-    var currentyear = num.parse(secrets().currentyear)+2;
+    var currentyear = num.parse(secrets().currentyear) + 2;
     var arr = <Future>[];
     List<charges_obj> list = [];
     var fi = [];
     while (yearStart != currentyear) {
       String fy = yearStart.toString() + yearEnd.toString();
-      arr.add(charges(fy));
+      arr.add(charges_forfin(fy));
       fi.add(fy);
       yearStart++;
       yearEnd++;

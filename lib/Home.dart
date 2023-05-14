@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_session_manager/flutter_session_manager.dart';
 import 'package:CustomUpstox/api_data_models/buysell.dart';
@@ -5,7 +6,7 @@ import 'package:CustomUpstox/api_data_models/charges.dart';
 import 'package:CustomUpstox/bottomSheet.dart';
 import 'package:intl/intl.dart';
 import 'DataFetch.dart';
-import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:shimmer_animation/shimmer_animation.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -27,11 +28,26 @@ class _HomeState extends State<Home> {
     0,
     0
   ]; //0th value Totalbuy , 1st Value Totalsell ,2nd Value TotalCharges, 3rd value TotalReturn;
-
+  var subscription;
+  late var isOnline = ConnectivityResult.none;
   @override
   void initState() {
+    subscription = Connectivity()
+        .onConnectivityChanged
+        .listen((ConnectivityResult result) {
+      setState(() {
+        isOnline = result;
+        showsnackbar();
+      });
+    });
     fetchchargedata();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    subscription.cancel();
+    super.dispose();
   }
 
   void fetchpldata() async {
@@ -82,90 +98,102 @@ class _HomeState extends State<Home> {
     fetchpldata();
   }
 
+  void showsnackbar() {
+    final SnackBar snackBar = SnackBar(
+      content: Text("No Internet Connection!"),
+      duration: Duration(hours: 1),
+    );
+    if (isOnline != ConnectivityResult.mobile &&
+        isOnline != ConnectivityResult.wifi &&
+        isOnline != ConnectivityResult.vpn) {
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     List<List<num>> bs = buysell;
     List<num> total = overallreturns;
     List<charges_obj> chargelist = this.chargelist;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Home"),
-      ),
-      bottomSheet: chargelist.isNotEmpty
-          ? CustomDataBottomrow(
-              Totalbuy: total[0],
-              Totalsell: total[1],
-              Totalcharges: total[2],
-              TotalReturn: total[3],
-            )
-          : null,
-      body: chargelist.isNotEmpty && buysell.isNotEmpty
-          ? ListView.builder(
-              padding: EdgeInsets.only(bottom: 65),
-              scrollDirection: Axis.vertical,
-              itemCount: chargelist.length + 1,
-              itemBuilder: (BuildContext context, int index) {
-                if (index == 0) return const CustomDataHeadrow();
-                return Material(
-                  color: CustomDatarow(
-                          financialYear: chargelist[index - 1].financial_year,
-                          buy: bs[index - 1][0],
-                          sell: bs[index - 1][1],
-                          charges: chargelist[index - 1].total)
-                      .colorcheck(),
-                  child: InkWell(
-                    splashColor: CustomDatarow(
+        appBar: AppBar(
+          title: const Text("Home"),
+        ),
+        bottomSheet: chargelist.isNotEmpty
+            ? CustomDataBottomrow(
+                Totalbuy: total[0],
+                Totalsell: total[1],
+                Totalcharges: total[2],
+                TotalReturn: total[3],
+              )
+            : null,
+        body: chargelist.isNotEmpty && buysell.isNotEmpty
+            ? ListView.builder(
+                padding: const EdgeInsets.only(bottom: 65),
+                scrollDirection: Axis.vertical,
+                itemCount: chargelist.length + 1,
+                itemBuilder: (BuildContext context, int index) {
+                  if (index == 0) return const CustomDataHeadrow();
+                  return Material(
+                    color: CustomDatarow(
                             financialYear: chargelist[index - 1].financial_year,
                             buy: bs[index - 1][0],
                             sell: bs[index - 1][1],
                             charges: chargelist[index - 1].total)
-                        .splashcolor(),
-                    onTap: () {
-                      showModalBottomSheet<void>(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return bottomSheet(
-                              index: index,
-                              bslist: plList[index - 1],
+                        .colorcheck(),
+                    child: InkWell(
+                      splashColor: CustomDatarow(
                               financialYear:
                                   chargelist[index - 1].financial_year,
-                              TotalBuy: bs[index - 1][0],
-                              TotalCharges: chargelist[index - 1].total,
-                              TotalSell: bs[index - 1][1],
-                            );
-                          },
-                          backgroundColor: Colors.indigo,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(20),
+                              buy: bs[index - 1][0],
+                              sell: bs[index - 1][1],
+                              charges: chargelist[index - 1].total)
+                          .splashcolor(),
+                      onTap: () {
+                        showModalBottomSheet<void>(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return bottomSheet(
+                                index: index,
+                                bslist: plList[index - 1],
+                                financialYear:
+                                    chargelist[index - 1].financial_year,
+                                TotalBuy: bs[index - 1][0],
+                                TotalCharges: chargelist[index - 1].total,
+                                TotalSell: bs[index - 1][1],
+                              );
+                            },
+                            backgroundColor: Colors.indigo,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(20),
+                              ),
                             ),
-                          ),
-                          clipBehavior: Clip.antiAliasWithSaveLayer);
-                    },
-                    child: CustomDatarow(
-                        financialYear: chargelist[index - 1].financial_year,
-                        buy: bs[index - 1][0],
-                        sell: bs[index - 1][1],
-                        charges: chargelist[index - 1].total),
-                  ),
-                );
-              })
-          : Center(
-              child: DefaultTextStyle(
-                style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 40.0,
-                    fontWeight: FontWeight.bold),
-                child: AnimatedTextKit(
-                  animatedTexts: [
-                    WavyAnimatedText("Loading..."),
-                  ],
-                  repeatForever: true,
-                  isRepeatingAnimation: true,
-                ),
-              ),
-            ),
-    );
+                            clipBehavior: Clip.antiAliasWithSaveLayer);
+                      },
+                      child: CustomDatarow(
+                          financialYear: chargelist[index - 1].financial_year,
+                          buy: bs[index - 1][0],
+                          sell: bs[index - 1][1],
+                          charges: chargelist[index - 1].total),
+                    ),
+                  );
+                })
+            : ListView.builder(
+                itemCount: 6,
+                scrollDirection: Axis.vertical,
+                itemBuilder: (BuildContext context, int index) {
+                  if (index == 0) return const CustomDataHeadrow();
+                  return Shimmer(
+                    direction: const ShimmerDirection.fromLTRB(),
+                    color: Colors.white,
+                    colorOpacity: 0.5,
+                    child: shimmercontainer(),
+                  );
+                }));
   }
 }
 
@@ -270,9 +298,8 @@ class CustomDatarow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: MediaQuery.of(context).size.width,
-      //  color: colorcheck(),
+      color: colorcheck(),
       height: 50,
-
       child: Row(children: [
         Container(
             decoration: const BoxDecoration(
@@ -345,6 +372,56 @@ class CustomDatarow extends StatelessWidget {
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            )),
+      ]),
+    );
+  }
+}
+
+class shimmercontainer extends StatelessWidget {
+  shimmercontainer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 10, bottom: 10),
+      width: MediaQuery.of(context).size.width / 3,
+      height: MediaQuery.of(context).size.height / 10,
+      decoration: BoxDecoration(
+          color: Colors.grey.shade300,
+          borderRadius: const BorderRadius.all(Radius.circular(16))),
+      child: Row(children: [
+        Container(
+            width: MediaQuery.of(context).size.width / 4,
+            height: MediaQuery.of(context).size.height,
+            alignment: Alignment.center,
+            child: const Text(
+              "",
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            )),
+        Container(
+            width: MediaQuery.of(context).size.width / 4,
+            height: MediaQuery.of(context).size.height,
+            alignment: Alignment.center,
+            child: const Text(
+              "",
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            )),
+        Container(
+            height: MediaQuery.of(context).size.height,
+            alignment: Alignment.center,
+            width: MediaQuery.of(context).size.width / 4,
+            child: const Text(
+              "",
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            )),
+        Container(
+            height: MediaQuery.of(context).size.height,
+            alignment: Alignment.center,
+            width: MediaQuery.of(context).size.width / 4,
+            child: const Text(
+              "",
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             )),
       ]),
     );

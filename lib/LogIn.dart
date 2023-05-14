@@ -36,6 +36,7 @@ class _AuthorizationState extends State<Authorization> {
   }
 
   void control() {
+    debugPrint(authorizationEndpoint.toString());
     controller = WebViewController()
       ..loadRequest(authorizationEndpoint)
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -51,9 +52,11 @@ class _AuthorizationState extends State<Authorization> {
           });
         },
         onNavigationRequest: (request) {
+          debugPrint(request.url.toString());
           if (request.url.startsWith(secrets().redirectUri.toString())) {
             Uri uro = Uri.parse(request.url.toString());
             codec = uro.query.toString().split("=")[1];
+            debugPrint(codec);
             Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
@@ -125,6 +128,7 @@ class _AccessTokenState extends State<AccessToken> {
       'redirect_uri': secrets().redirectUri,
       'grant_type': 'authorization_code'
     });
+    // debugPrint(access_token.toString());
     Future<http.Response?> register() async {
       http.Response? response;
       try {
@@ -135,6 +139,7 @@ class _AccessTokenState extends State<AccessToken> {
             },
             body: jsonEncode(''));
       } catch (e) {
+        showAlertDialog(context);
       }
       return response;
     }
@@ -150,7 +155,6 @@ class _AccessTokenState extends State<AccessToken> {
 
   void settoken() async {
     secureStore().setToken(parsed["access_token"]);
-
   }
 }
 

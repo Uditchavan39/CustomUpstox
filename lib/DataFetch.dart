@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:developer';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_session_manager/flutter_session_manager.dart';
 import 'package:CustomUpstox/api_data_models/buysell.dart';
 import 'package:CustomUpstox/api_data_models/charges.dart';
@@ -107,9 +108,7 @@ class DataFetch {
             HttpHeaders.authorizationHeader: 'Bearer $accesstoken'
           },
         );
-      } catch (e) {
-        
-      }
+      } catch (e) {}
       return response;
     }
 
@@ -145,21 +144,21 @@ class DataFetch {
   Future<List<charges_obj>> charges_for_all_financial_year() async {
     var yearStart = secrets().yearStart;
     var yearEnd = secrets().yearEnd;
-    int i = 2;
-    var totalChargeCheck = 0.0;
+    var currentyear = num.parse(secrets().currentyear)+2;
+    var arr = <Future>[];
     List<charges_obj> list = [];
-    while (i >= 0 || totalChargeCheck != 0) {
-      if (i < 0 && totalChargeCheck == 0) break;
+    var fi = [];
+    while (yearStart != currentyear) {
       String fy = yearStart.toString() + yearEnd.toString();
-      charges_obj temp = await charges(fy).then((value) {
-        return value;
-      });
-      totalChargeCheck = temp.total;
-      i--;
+      arr.add(charges(fy));
+      fi.add(fy);
       yearStart++;
       yearEnd++;
-      list.add(temp);
-      await SessionManager().set("charge$fy", temp);
+    }
+    List<dynamic> response = await Future.wait(arr);
+    for (int i = 0; i < response.length; i++) {
+      list.add(response[i]);
+      await SessionManager().set("charge${fi[i]}", response[i]);
     }
     await SessionManager().set("listSize", list.length);
     await SessionManager().set("chargelist", true);
@@ -174,20 +173,26 @@ Future<List<List<buySell>>> buysell_for_all_financial_year() async {
   int listLength = await SessionManager().get("listSize");
   List<List<buySell>> ans = [];
   int i = 0;
+  var arr = <Future>[];
   while (i < listLength) {
     String fy = yearStart.toString() + yearEnd.toString();
-    List<buySell> list =
-        await DataFetch().realizedProfitLossList(fy).then((value) {
-      return value;
-    });
-    ans.add(list);
+    arr.add(DataFetch().realizedProfitLossList(fy));
     i++;
     yearStart++;
     yearEnd++;
   }
+  List<dynamic> response = await Future.wait(arr);
+  for (var element in response) {
+    List<buySell> list = [];
+    for (buySell e in element) {
+      list.add(e);
+    }
+    ans.add(list);
+  }
+  ;
   // await SessionManager().set("tradecount", list.length);
   await SessionManager().set("plList", true);
-    return ans;
+  return ans;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -197,13 +202,14 @@ Future<List<charges_obj>> fetchsessionchargeobj() async {
   List<charges_obj> list = [];
   var length = await SessionManager().get("listSize");
   int i = 0;
+  var arr = <Future>[];
   while (i < length) {
     String fy = yearStart.toString() + yearEnd.toString();
     Map<String, dynamic> temp =
         await SessionManager().get("charge$fy").then((value) {
       return value;
     });
-    if (temp==null) continue;
+    if (temp == null) continue;
     charges_obj obj = jsoncharges().fromJson(temp);
     list.add(obj);
     i++;

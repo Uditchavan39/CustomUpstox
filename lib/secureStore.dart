@@ -4,7 +4,6 @@ class secureStore {
   final storage = const FlutterSecureStorage();
   Future<String?> gettoken() async {
     
-   
     return await storage.read(
         key: 'access_token',
         aOptions: const AndroidOptions(encryptedSharedPreferences: true));

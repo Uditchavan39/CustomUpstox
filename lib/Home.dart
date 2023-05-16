@@ -1,3 +1,4 @@
+import 'package:CustomUpstox/LogIn.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_session_manager/flutter_session_manager.dart';
@@ -16,9 +17,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  late String access_token = "token Loading >>>>";
   DateTime date = DateTime.now();
-  late charges_obj chargeforfin = defaultchargeObj().defaultChargeObj;
   late List<charges_obj> chargelist = [];
   late List<List<buySell>> plList = [];
   late List<List<num>> buysell = []; // 0th value buy and 1st value sell;

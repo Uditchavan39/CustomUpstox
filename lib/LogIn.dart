@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:CustomUpstox/main.dart';
+import 'package:splashscreen/splashscreen.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:CustomUpstox/secureStore.dart';
@@ -154,7 +155,7 @@ class _AccessTokenState extends State<AccessToken> {
   }
 
   void settoken() async {
-    secureStore().setToken(parsed["access_token"]);
+   await secureStore().setToken(parsed["access_token"]);
   }
 }
 

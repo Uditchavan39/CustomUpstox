@@ -36,6 +36,7 @@ class _splash_screenState extends State<splash_screen> {
       await secureStore().setDate(date);
     } else {
       access_token = (await secureStore().checkkey("access_token"))!;
+      
       date_match = true;
     }
     setState(() {

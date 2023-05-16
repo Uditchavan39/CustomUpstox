@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:developer';
+import 'package:CustomUpstox/LogIn.dart';
+import 'package:CustomUpstox/splash_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_session_manager/flutter_session_manager.dart';
 import 'package:CustomUpstox/api_data_models/buysell.dart';
@@ -9,88 +11,67 @@ import 'package:CustomUpstox/secureStore.dart';
 import 'package:http/http.dart' as http;
 import 'package:CustomUpstox/auth/secrets.dart';
 
-class DataFetch {
-  Future<List<buySell>> realizedProfitLossList(String financialYear) async {
+class register_for_allrequests {
+  Future<http.Response?> register(
+    Uri pldata,
+  ) async {
     String accesstoken = await secureStore().gettoken().then((value) {
       return value!;
     });
+    http.Response? response;
+    try {
+      response = await http.get(
+        pldata,
+        headers: {
+          HttpHeaders.acceptHeader: "application/json",
+          'Api-Version': '2.0',
+          HttpHeaders.authorizationHeader: 'Bearer $accesstoken'
+        },
+      );
+      return response;
+    } catch (e) {
+      return await Future.delayed(Duration(milliseconds: 1000), () async {
+        return await register(pldata);
+      });
+    }
+  }
+}
+
+class DataFetch {
+  Future<List<buySell>> realizedProfitLossList(String financialYear) async {
     final pldata = Uri.parse(
         'https://api-v2.upstox.com/trade/profit-loss/data?segment=EQ&financial_year=$financialYear&page_number=1&page_size=3000');
-    Future<http.Response?> register() async {
-      http.Response? response;
-      try {
-        response = await http.get(
-          pldata,
-          headers: {
-            HttpHeaders.acceptHeader: "application/json",
-            'Api-Version': '2.0',
-            HttpHeaders.authorizationHeader: 'Bearer $accesstoken'
-          },
-        );
-      } catch (e) {
-        log(e.toString());
-      }
-      return response;
-    }
 
-    http.Response? par = await register();
-    if (par != null && par.statusCode == 200) {
-      late Map<String, dynamic> temp = jsonDecode(par!.body);
-      List<Map<String, dynamic>> parsed =
-          (temp["data"] as List).map((e) => e as Map<String, dynamic>).toList();
-      int tradecount = await profitLossDataCount(financialYear).then((value) {
-        return value;
-      });
-      List<buySell> bsList = [];
-      for (int i = 0; i < parsed.length; i++) {
-        buySell bs_obj = buySell(
-            parsed[i]["scripName"],
-            parsed[i]["tradeType"],
-            parsed[i]["buyDate"],
-            parsed[i]["quantity"],
-            parsed[i]["buyAverage"],
-            parsed[i]["sellDate"],
-            parsed[i]["sellAverage"],
-            parsed[i]["financialYear"],
-            parsed[i]["isin"],
-            parsed[i]["dataSuccessOrError"]);
-        bsList.add(bs_obj);
-        await SessionManager().set("bs+$i+obj+$financialYear", bs_obj);
-      }
-      await SessionManager().set("plListsize$financialYear", parsed.length);
-      return bsList;
-    } else {
-      realizedProfitLossList(financialYear);
-      List<buySell> l = [];
-      return l;
+    http.Response? par = await register_for_allrequests().register(pldata);
+    late Map<String, dynamic> temp = jsonDecode(par!.body);
+    List<Map<String, dynamic>> parsed =
+        (temp["data"] as List).map((e) => e as Map<String, dynamic>).toList();
+    List<buySell> bsList = [];
+    for (int i = 0; i < parsed.length; i++) {
+      buySell bs_obj = buySell(
+          parsed[i]["scripName"],
+          parsed[i]["tradeType"],
+          parsed[i]["buyDate"],
+          parsed[i]["quantity"],
+          parsed[i]["buyAverage"],
+          parsed[i]["sellDate"],
+          parsed[i]["sellAverage"],
+          parsed[i]["financialYear"],
+          parsed[i]["isin"],
+          parsed[i]["dataSuccessOrError"]);
+      bsList.add(bs_obj);
+      await SessionManager().set("bs+$i+obj+$financialYear", bs_obj);
     }
+    await SessionManager().set("plListsize$financialYear", parsed.length);
+    return bsList;
   }
 
 //------------------------------------------------------------------------------------------------------------
   Future<int> profitLossDataCount(String financialYear) async {
-    String accesstoken = await secureStore().gettoken().then((value) {
-      return value!;
-    });
     final pldatacount = Uri.parse(
         'https://api-v2.upstox.com/trade/profit-loss/metadata?start_date=01-04-2022&emd_date=30-03-2023&segment=EQ&financial_year=$financialYear');
-    Future<http.Response?> register() async {
-      http.Response? response;
-      try {
-        response = await http.get(
-          pldatacount,
-          headers: {
-            HttpHeaders.acceptHeader: "application/json",
-            'Api-Version': '2.0',
-            HttpHeaders.authorizationHeader: 'Bearer $accesstoken'
-          },
-        );
-      } catch (e) {
-        log(e.toString());
-      }
-      return response;
-    }
 
-    http.Response? par = await register();
+    http.Response? par = await register_for_allrequests().register(pldatacount);
     late Map<String, dynamic> parsed = jsonDecode(par!.body);
     int tradecount = parsed["trades_count"];
     return tradecount;
@@ -98,60 +79,34 @@ class DataFetch {
 //---------------------------------------------------------------------------------------------------------------------------
 
   Future<charges_obj> charges_forfin(String financialYear) async {
-    String accesstoken = await secureStore().gettoken().then((value) {
-      return value!;
-    });
     final charges = Uri.parse(
         'https://api-v2.upstox.com/trade/profit-loss/charges?&financial_year=$financialYear&segment=EQ');
-    Future<http.Response?> register() async {
-      http.Response? response;
-      try {
-        response = await http.get(
-          charges,
-          headers: {
-            HttpHeaders.acceptHeader: "application/json",
-            'Api-Version': '2.0',
-            HttpHeaders.authorizationHeader: 'Bearer $accesstoken'
-          },
-        );
-      } catch (e) {
-        log(e.toString());
-      }
-      return response;
-    }
 
-    http.Response? par = await register();
-    if (par != null && par.statusCode == 200) {
-      late Map<String, dynamic> parsed = jsonDecode(par!.body);
-      if (parsed["status"] == "error") {
-        secureStore().deleteall();
-        secureStore().setDate("");
-        return defaultchargeObj().defaultChargeObj;
-      } else {
-        parsed = parsed["data"];
-        Map<String, dynamic> taxes = parsed["charges_breakdown"]["taxes"];
-        Map<String, dynamic> otherCharge =
-            parsed["charges_breakdown"]["charges"];
-
-        charges_obj charge = charges_obj(
-            parsed["charges_breakdown"]["total"],
-            parsed["charges_breakdown"]["brokerage"],
-            taxes["gst"],
-            taxes["stt"],
-            taxes["stamp_duty"],
-            otherCharge["transaction"],
-            otherCharge["clearing"],
-            otherCharge["others"],
-            otherCharge["sebi_turnover"],
-            otherCharge["demat_transaction"],
-            financialYear,
-            true);
-        return charge;
-      }
+    http.Response? par = await register_for_allrequests().register(charges);
+    late Map<String, dynamic> parsed = jsonDecode(par!.body);
+    if (parsed["status"] == "error") {
+      secureStore().deleteall();
+      secureStore().setDate("");
+      return defaultchargeObj().defaultChargeObj;
     } else {
-      charges_forfin(financialYear);
-      charges_obj l = defaultchargeObj().defaultChargeObj;
-      return l;
+      parsed = parsed["data"];
+      Map<String, dynamic> taxes = parsed["charges_breakdown"]["taxes"];
+      Map<String, dynamic> otherCharge = parsed["charges_breakdown"]["charges"];
+
+      charges_obj charge = charges_obj(
+          parsed["charges_breakdown"]["total"],
+          parsed["charges_breakdown"]["brokerage"],
+          taxes["gst"],
+          taxes["stt"],
+          taxes["stamp_duty"],
+          otherCharge["transaction"],
+          otherCharge["clearing"],
+          otherCharge["others"],
+          otherCharge["sebi_turnover"],
+          otherCharge["demat_transaction"],
+          financialYear,
+          true);
+      return charge;
     }
   }
 

@@ -1,4 +1,3 @@
-import 'package:CustomUpstox/LogIn.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_session_manager/flutter_session_manager.dart';
@@ -11,7 +10,6 @@ import 'package:shimmer_animation/shimmer_animation.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
-
   @override
   State<Home> createState() => _HomeState();
 }
@@ -98,7 +96,7 @@ class _HomeState extends State<Home> {
   }
 
   void showsnackbar() {
-    final SnackBar snackBar = SnackBar(
+     SnackBar snackBar = const SnackBar(
       content: Text("No Internet Connection!"),
       duration: Duration(hours: 1),
     );

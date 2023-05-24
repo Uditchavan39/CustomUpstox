@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:developer';
+import 'package:CustomUpstox/Home.dart';
 import 'package:CustomUpstox/LogIn.dart';
 import 'package:CustomUpstox/splash_screen.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,6 +11,7 @@ import 'package:CustomUpstox/api_data_models/charges.dart';
 import 'package:CustomUpstox/secureStore.dart';
 import 'package:http/http.dart' as http;
 import 'package:CustomUpstox/auth/secrets.dart';
+import 'package:intl/intl.dart';
 
 class register_for_allrequests {
   Future<http.Response?> register(
@@ -140,6 +142,8 @@ class DataFetch {
 Future<List<List<buySell>>> buysell_for_all_financial_year() async {
   var yearStart = secrets().yearStart;
   var yearEnd = secrets().yearEnd;
+  DateFormat format = DateFormat("dd-MM-yyyy");
+
   int listLength = await SessionManager().get("listSize");
   List<List<buySell>> ans = [];
   int i = 0;
@@ -157,6 +161,7 @@ Future<List<List<buySell>>> buysell_for_all_financial_year() async {
     for (buySell e in element) {
       list.add(e);
     }
+    list.sort((a, b) => format.parse(a.sellDate.toString()).compareTo(format.parse(b.sellDate.toString())));
     ans.add(list);
   }
   ;

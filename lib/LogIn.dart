@@ -115,7 +115,9 @@ class _AccessTokenState extends State<AccessToken> {
 
   @override
   Widget build(BuildContext context) {
-    return token=="" ?  const ProgressIndicatorExample():const MyHomePage(title: "My Upstox");
+    return token == ""
+        ? const ProgressIndicatorExample()
+        : const MyHomePage(title: "My Upstox");
   }
 
   late Map<String, dynamic> parsed;
@@ -148,6 +150,7 @@ class _AccessTokenState extends State<AccessToken> {
     http.Response? par = await register();
     parsed = jsonDecode(par!.body);
     settoken();
+    debugPrint(parsed["access_token"]);
     setState(() {
       token = parsed["access_token"];
       userName = parsed["user_name"];
@@ -155,7 +158,7 @@ class _AccessTokenState extends State<AccessToken> {
   }
 
   void settoken() async {
-   await secureStore().setToken(parsed["access_token"]);
+    await secureStore().setToken(parsed["access_token"]);
   }
 }
 
@@ -205,7 +208,7 @@ class ProgressIndicatorExample extends StatefulWidget {
 class _ProgressIndicatorExampleState extends State<ProgressIndicatorExample>
     with TickerProviderStateMixin {
   late AnimationController controller;
- 
+
   @override
   void initState() {
     controller = AnimationController(
@@ -232,7 +235,6 @@ class _ProgressIndicatorExampleState extends State<ProgressIndicatorExample>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-
             const SizedBox(height: 35),
             LinearProgressIndicator(
               value: controller.value,

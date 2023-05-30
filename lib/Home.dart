@@ -1,3 +1,4 @@
+import 'package:CustomUpstox/LogIn.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_session_manager/flutter_session_manager.dart';
@@ -32,10 +33,12 @@ class _HomeState extends State<Home> {
     subscription = Connectivity()
         .onConnectivityChanged
         .listen((ConnectivityResult result) {
-      setState(() {
-        isOnline = result;
-        showsnackbar();
-      });
+      if (mounted) {
+        setState(() {
+          isOnline = result;
+          showsnackbar();
+        });
+      }
     });
     fetchchargedata();
     super.initState();
@@ -58,23 +61,29 @@ class _HomeState extends State<Home> {
       plList = await fetchsessionProfitLossobj().then((value) {
         return value;
       });
-      setState(() {
-        plList = plList;
-      });
+      if (mounted) {
+        setState(() {
+          plList = plList;
+        });
+      }
     }
     buysell = await jsonBuySell().buysellTotal(plList).then((value) {
       return value;
     });
-    setState(() {
-      buysell = buysell;
-    });
+    if (mounted) {
+      setState(() {
+        buysell = buysell;
+      });
+    }
     overallreturns =
         await jsonBuySell().allyearreturn(chargelist, buysell).then((value) {
       return value;
     });
-    setState(() {
-      overallreturns = overallreturns;
-    });
+    if (mounted) {
+      setState(() {
+        overallreturns = overallreturns;
+      });
+    }
   }
 
   void fetchchargedata() async {
@@ -88,15 +97,17 @@ class _HomeState extends State<Home> {
       chargelist = await fetchsessionchargeobj().then((value) {
         return value;
       });
-      setState(() {
-        chargelist = chargelist;
-      });
+      if (mounted) {
+        setState(() {
+          chargelist = chargelist;
+        });
+      }
     }
     fetchpldata();
   }
 
   void showsnackbar() {
-     SnackBar snackBar = const SnackBar(
+    SnackBar snackBar = const SnackBar(
       content: Text("No Internet Connection!"),
       duration: Duration(hours: 1),
     );

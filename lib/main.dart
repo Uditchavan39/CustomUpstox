@@ -1,8 +1,8 @@
+import 'package:CustomUpstox/Holdings/Holdings.dart';
 import 'package:flutter/material.dart';
-import 'package:CustomUpstox/Dividend.dart';
+import 'package:CustomUpstox/Dividend/Dividend.dart';
 import 'package:CustomUpstox/Home.dart';
 import 'package:CustomUpstox/splash_screen.dart';
-
 
 void main() {
   runApp(const MyApp());
@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
         // or simply save your changes to "hot reload" in a Flutter IDE).
         // Notice that the counter didn't reset back to zero; the application
         // is not restarted.
-
+        
         primarySwatch: Colors.deepPurple,
       ),
       home: const splash_screen(),
@@ -36,7 +36,6 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
   final String title;
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -48,7 +47,8 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
   }
-  final screens = [const Home(), const Dividend()];
+   final screens = [const Home(), const Holdings(),const Dividend()];
+   
 
   void _onItemTapped(int index) {
     setState(() {
@@ -71,6 +71,7 @@ class _MyHomePageState extends State<MyHomePage> {
           showUnselectedLabels: false,
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(icon: Icon(Icons.work),label: 'Holdings'),
             BottomNavigationBarItem(
                 icon: Icon(Icons.pie_chart), label: 'Dividend')
           ]),

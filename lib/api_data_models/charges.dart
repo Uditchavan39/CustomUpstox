@@ -1,5 +1,5 @@
 class charges_obj {
-  var total,
+  num total,
       brokerage,
       gst,
       stt,
@@ -8,8 +8,8 @@ class charges_obj {
       clearing,
       others,
       sebi_turnover,
-      demat_transaction,
-      financial_year;
+      demat_transaction;
+    var  financial_year;
   bool dataSuccessOrError;
 
   charges_obj(
@@ -64,16 +64,16 @@ class jsoncharges {
 
 class defaultchargeObj {
   get defaultChargeObj => charges_obj(
-      "Wait...",
-      "wait...",
-      "wait...",
-      "wait...",
-      "wait...",
-      "wait...",
-      "wait...",
-      "wait...",
-      "wait...",
-      "wait...",
-      "wait...",
+      0.0,
+      0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0, 
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    "wait...",
       false);
 }

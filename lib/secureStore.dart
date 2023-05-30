@@ -1,16 +1,16 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
+
 class secureStore {
+  
   final storage = const FlutterSecureStorage();
   Future<String?> gettoken() async {
-    
     return await storage.read(
         key: 'access_token',
         aOptions: const AndroidOptions(encryptedSharedPreferences: true));
   }
 
   Future<bool?> checkkey(String token) async {
-   
     return await storage.containsKey(
         key: token,
         aOptions: const AndroidOptions(encryptedSharedPreferences: true));
@@ -40,9 +40,10 @@ class secureStore {
         value: date,
         aOptions: const AndroidOptions(encryptedSharedPreferences: true));
   }
+
   Future<String?> getDate() async {
     return await storage.read(
         key: 'date',
         aOptions: const AndroidOptions(encryptedSharedPreferences: true));
   }
-  }
+}

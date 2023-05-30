@@ -207,8 +207,8 @@ class CustomDatarowBottomsheet extends StatelessWidget {
                     padding: const EdgeInsets.only(right: 10),
                     child: Text(
                       profitLoss.abs() < 99999
-                          ? "${currencyconverter().indianRupeesFormat.format(profitLoss).toString()}"
-                          : "${currencyconverter().indianRupeesFormatCompact.format(profitLoss).toString()}",
+                          ? currencyconverter().indianRupeesFormat.format(profitLoss).toString()
+                          : currencyconverter().indianRupeesFormatCompact.format(profitLoss).toString(),
                       textAlign: TextAlign.right,
                       overflow: TextOverflow.clip,
                       style: TextStyle(

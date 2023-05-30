@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:developer';
 import 'package:CustomUpstox/Home.dart';
 import 'package:CustomUpstox/LogIn.dart';
+import 'package:CustomUpstox/api_data_models/holdingmodal.dart';
 import 'package:CustomUpstox/splash_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_session_manager/flutter_session_manager.dart';
@@ -161,7 +162,9 @@ Future<List<List<buySell>>> buysell_for_all_financial_year() async {
     for (buySell e in element) {
       list.add(e);
     }
-    list.sort((a, b) => format.parse(a.sellDate.toString()).compareTo(format.parse(b.sellDate.toString())));
+    list.sort((a, b) => format
+        .parse(a.sellDate.toString())
+        .compareTo(format.parse(b.sellDate.toString())));
     ans.add(list);
   }
   ;
@@ -219,4 +222,40 @@ Future<List<List<buySell>>> fetchsessionProfitLossobj() async {
     yearEnd++;
   }
   return list;
+}
+
+//------------------------------------------------------ Fetch Holdings Data--------------------------------------------
+
+class fetchHoldingData {
+  Future<List<holdingmodal>> fetchholding() async {
+    List<holdingmodal> templist = [];
+    Uri holdinguri =
+        Uri.parse('https://api-v2.upstox.com/portfolio/long-term-holdings');
+    http.Response? parsed =
+        await register_for_allrequests().register(holdinguri);
+
+    Map<String, dynamic> temp = jsonDecode(parsed!.body);
+    if (temp["data"] == null) return templist;
+    List<Map<String, dynamic>> pas =
+        (temp["data"] as List).map((e) => e as Map<String, dynamic>).toList();
+    for (int i = 0; i < pas.length; i++) {
+      holdingmodal hold = holdingmodal(
+          pas[i]["company_name"],
+          pas[i]["quantity"],
+          pas[i]["last_price"],
+          pas[i]["pnl"],
+          pas[i]["average_price"],
+          pas[i]["tradingsymbol"],
+          const ObjectKey('obj'));
+      templist.add(hold);
+    }
+    return templist;
+  }
+
+  Future<List<holdingmodal>> fakedata(int i) async {
+    List<holdingmodal> templist = [];
+    templist.add(holdingmodal("company_name", 20 , 100 * i, 501 * i, 652,
+        "trading_symbol", ObjectKey('obj')));
+    return templist;
+  }
 }

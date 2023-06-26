@@ -50,21 +50,24 @@ class DataFetch {
     List<Map<String, dynamic>> parsed =
         (temp["data"] as List).map((e) => e as Map<String, dynamic>).toList();
     List<buySell> bsList = [];
+    debugPrint(parsed.toString());
     for (int i = 0; i < parsed.length; i++) {
       buySell bs_obj = buySell(
-          parsed[i]["scripName"],
-          parsed[i]["tradeType"],
-          parsed[i]["buyDate"],
+          parsed[i]["scrip_name"],
+          parsed[i]["trade_type"],
+          parsed[i]["buy_date"],
           parsed[i]["quantity"],
-          parsed[i]["buyAverage"],
-          parsed[i]["sellDate"],
-          parsed[i]["sellAverage"],
+          parsed[i]["buy_average"],
+          parsed[i]["sell_date"],
+          parsed[i]["sell_average"],
           parsed[i]["financialYear"],
           parsed[i]["isin"],
           parsed[i]["dataSuccessOrError"]);
       bsList.add(bs_obj);
+      debugPrint(bs_obj.scripName.toString());
       await SessionManager().set("bs+$i+obj+$financialYear", bs_obj);
     }
+    debugPrint(bsList.toString());
     await SessionManager().set("plListsize$financialYear", parsed.length);
     return bsList;
   }
@@ -157,9 +160,9 @@ Future<List<List<buySell>>> buysell_for_all_financial_year() async {
     yearEnd++;
   }
   List<dynamic> response = await Future.wait(arr);
-  for (var element in response) {
+  for (List<buySell> element in response) {
     List<buySell> list = [];
-    for (buySell e in element) {
+    for (var e in element) {
       list.add(e);
     }
     list.sort((a, b) => format
@@ -167,7 +170,6 @@ Future<List<List<buySell>>> buysell_for_all_financial_year() async {
         .compareTo(format.parse(b.sellDate.toString())));
     ans.add(list);
   }
-  ;
   // await SessionManager().set("tradecount", list.length);
   await SessionManager().set("plList", true);
   return ans;
@@ -254,7 +256,7 @@ class fetchHoldingData {
 
   Future<List<holdingmodal>> fakedata(int i) async {
     List<holdingmodal> templist = [];
-    templist.add(holdingmodal("company_name", 20 , 100 * i, 501 * i, 652,
+    templist.add(holdingmodal("company_name", 20, 100 * i, 501 * i, 652,
         "trading_symbol", ObjectKey('obj')));
     return templist;
   }

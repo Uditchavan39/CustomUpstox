@@ -59,6 +59,7 @@ class _DividendState extends State<Dividend> {
             fontWeight: FontWeight.bold,
             fontSize: 26,
           ),
+          
         ),
         bottomSheet: CustomTotalDividend(TotalReturn: ret),
         body: message.isEmpty
@@ -218,17 +219,20 @@ class CustomDatarowBottomsheet extends StatelessWidget {
         child: Column(children: [
           Container(
             decoration: const BoxDecoration(
+              color: Colors.deepPurple,
                 border:
                     Border(bottom: BorderSide(width: 2, color: Colors.black))),
             width: MediaQuery.of(context).size.width,
-            alignment: Alignment.center,
-            padding: const EdgeInsets.only(top: 20),
+            alignment: Alignment.topCenter,
+            padding: const EdgeInsets.only(top: 10,bottom: 10),
             child: Text(
               message.address,
-              textAlign: TextAlign.left,
+              textAlign: TextAlign.justify,
               overflow: TextOverflow.clip,
+              
               style: const TextStyle(
                 fontSize: 25,
+                color: Colors.white,
                 fontWeight: FontWeight.w500,
               ),
             ),

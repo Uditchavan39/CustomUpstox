@@ -88,11 +88,11 @@ class _HoldingsState extends State<Holdings> {
       appBar: AppBar(
         title: const Text("Holdings"),
         backgroundColor: Colors.deepPurple,
-          titleTextStyle: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 26,
-          ),
+        titleTextStyle: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 26,
+        ),
       ),
       body: holdlist.isEmpty
           ? ListView.builder(
@@ -258,7 +258,8 @@ class _holdingforholdingsState extends State<holdingforholdings> {
                 percent: _percent.abs() > 1.0 ? 1.0 : _percent.abs(),
                 center: Text(
                   "${(_percent * 100).toStringAsFixed(2)}%",
-                  style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 17),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 17),
                 ),
                 barRadius: const Radius.circular(20),
               ),
@@ -467,6 +468,15 @@ class _holdingbottomsheetState extends State<holdingbottomsheet> {
             fontSize: 20,
             fontWeight: FontWeight.w500,
           ),
+        ),
+        backgroundColor: Colors.deepPurple,
+        iconTheme: const IconThemeData(
+          color: Colors.white,
+        ),
+        titleTextStyle: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 26,
         ),
       ),
       body: SingleChildScrollView(

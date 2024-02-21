@@ -35,6 +35,9 @@ class _bottomSheetState extends State<bottomSheet> {
             title: Text(
                 "Financial Year : ${widget.financialYear.substring(0, 2)}-${widget.financialYear.substring(2)}"),
             backgroundColor: Colors.deepPurple,
+            iconTheme:const IconThemeData(
+            color: Colors.white,
+          ),
             titleTextStyle: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,

@@ -16,5 +16,8 @@ Create App In your Upstox Account. where you will Receive API Key, API Secret an
 
 -Fetching Holdings Data in RealTime and Updating Profit Loss percentage With Percent Indicators.
 
-<img src="https://github.com/Uditchavan39/CustomUpstox/assets/59533381/1e311cf0-574f-458e-92a4-dbbff44fc2a2" width=30% height=30%>
-<img src="https://github.com/Uditchavan39/CustomUpstox/assets/59533381/a5a17c0c-1102-412a-a5d5-976f3b22279a" width=30% height=30%>
+<img src="https://github.com/Uditchavan39/CustomUpstox/assets/59533381/6e614c97-4fe0-4952-a21a-fe33cc5d1e59" width=30% height=30%>
+<img src="https://github.com/Uditchavan39/CustomUpstox/assets/59533381/d54bee1c-4e24-4f60-b977-ea942bca6154" width=30% height=30%>
+<img src="" width=30% height=30%>
+<img src="https://github.com/Uditchavan39/CustomUpstox/assets/59533381/513d4b90-f01d-4d9f-af1b-17edbba45461" width=30% height=30%>
+
